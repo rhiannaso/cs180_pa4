@@ -40,12 +40,26 @@ public:
 	//Our shader program for textures
 	std::shared_ptr<Program> texProg;
 
+    //Our shader program for skybox
+	std::shared_ptr<Program> cubeProg;
+
 	//our geometry
 	shared_ptr<Shape> sphere;
 
 	shared_ptr<Shape> theDog;
 
 	shared_ptr<Shape> cube;
+
+    //skybox data
+    vector<std::string> faces {
+        "right.jpg",
+        "left.jpg",
+        "top.jpg",
+        "bottom.jpg",
+        "front.jpg",
+        "back.jpg"
+    }; 
+    unsigned int cubeMapTexture;
 
 	//global data for ground plane - direct load constant defined CPU data to GPU (not obj)
 	GLuint GrndBuffObj, GrndNorBuffObj, GrndTexBuffObj, GIndxBuffObj;
@@ -239,11 +253,46 @@ public:
   		texture2->setUnit(2);
   		texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
+        // Initialize the GLSL program that we will use for texture mapping
+		cubeProg = make_shared<Program>();
+		cubeProg->setVerbose(true);
+		cubeProg->setShaderNames(resourceDirectory + "/cube_vert.glsl", resourceDirectory + "/cube_frag.glsl");
+		cubeProg->init();
+		cubeProg->addUniform("P");
+		cubeProg->addUniform("V");
+		cubeProg->addUniform("M");
+		cubeProg->addUniform("skybox");
+		cubeProg->addAttribute("vertPos");
+		cubeProg->addAttribute("vertNor");
+
   		// init splines up and down
        splinepath[0] = Spline(glm::vec3(-6,0,5), glm::vec3(-1,-5,5), glm::vec3(1, 5, 5), glm::vec3(2,0,5), 5);
        splinepath[1] = Spline(glm::vec3(2,0,5), glm::vec3(3,-2,5), glm::vec3(-0.25, 0.25, 5), glm::vec3(0,0,5), 5);
     
 	}
+
+    unsigned int createSky(string dir, vector<string> faces) {
+        unsigned int textureID;
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+        int width, height, nrChannels;
+        stbi_set_flip_vertically_on_load(false);
+        for(GLuint i = 0; i < faces.size(); i++) {
+            unsigned char *data = stbi_load((dir+faces[i]).c_str(), &width, &height, &nrChannels, 0);
+            if (data) {
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            } else {
+                cout << "failed to load: " << (dir+faces[i]).c_str() << endl;
+            }
+        }
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        cout << " creating cube map any errors : " << glGetError() << endl;
+        return textureID;
+    }
 
 	void initGeom(const std::string& resourceDirectory)
 	{
@@ -279,6 +328,19 @@ public:
 			theDog->init();
 		}
 
+        rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/cube.obj").c_str());
+		if (!rc) {
+			cerr << errStr << endl;
+		} else {
+			
+			cube = make_shared<Shape>();
+			cube->createShape(TOshapesB[0]);
+			cube->measure();
+			cube->init();
+		}
+
+        cubeMapTexture = createSky("../resources/skybox/", faces);
+
 		//code to load in the ground plane (CPU defined data passed to GPU)
 		initGround();
 	}
@@ -286,7 +348,7 @@ public:
 	//directly pass quad for the ground to the GPU
 	void initGround() {
 
-		float g_groundSize = 20;
+		float g_groundSize = 30;
 		float g_groundY = -0.25;
 
   		// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
@@ -484,20 +546,45 @@ public:
 		  }
 		Model->popMatrix();
 
-		//draw big background sphere
-		glUniform1i(texProg->getUniform("flip"), 0);
-		texture1->bind(texProg->getUniform("Texture0"));
-		Model->pushMatrix();
-			Model->loadIdentity();
-			Model->scale(vec3(8.0));
-			setModel(texProg, Model);
-			sphere->draw(texProg);
-		Model->popMatrix();
+		// //draw big background sphere
+		// glUniform1i(texProg->getUniform("flip"), 0);
+		// texture1->bind(texProg->getUniform("Texture0"));
+		// Model->pushMatrix();
+		// 	Model->loadIdentity();
+		// 	Model->scale(vec3(8.0));
+		// 	setModel(texProg, Model);
+		// 	sphere->draw(texProg);
+		// Model->popMatrix();
 
 		glUniform1i(texProg->getUniform("flip"), 1);
 		drawGround(texProg);
 
 		texProg->unbind();
+
+        //to draw the sky box bind the right shader
+        cubeProg->bind();
+        //set the projection matrix - can use the same one
+        glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+        //set the depth function to always draw the box!
+        glDepthFunc(GL_LEQUAL);
+        //set up view matrix to include your view transforms
+        //(your code likely will be different depending
+        SetView(cubeProg);
+        //set and send model transforms - likely want a bigger cube
+        Model->pushMatrix();
+        Model->scale(vec3(35, 35, 35));
+        glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
+        Model->popMatrix();
+        //bind the cube map texture
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+
+        //draw the actual cube
+        cube->draw(cubeProg);
+
+        //set the depth test back to normal!
+        glDepthFunc(GL_LESS);
+        //unbind the shader for the skybox
+        cubeProg->unbind(); 
 
 		//use the material shader
 		prog->bind();
