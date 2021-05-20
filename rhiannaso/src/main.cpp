@@ -65,8 +65,12 @@ public:
 	double g_phi, g_theta;
 	vec3 view = vec3(0, 0, 1);
 	vec3 strafe = vec3(1, 0, 0);
-	vec3 g_eye = vec3(0, 1, 0);
-	vec3 g_lookAt = vec3(0, 1, -4);
+	vec3 g_eye = vec3(0, 0, 0);
+	vec3 g_lookAt = vec3(0, 0, -4);
+    float maxScrollX = 640;
+    float maxScrollY = 480;
+    float currPosX = (-90*maxScrollX)/180;
+    float currPosY = 0;
 
 	Spline splinepath[2];
 	bool goCamera = false;
@@ -104,13 +108,47 @@ public:
 
 
 	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY) {
-   		cout << "xDel + yDel " << deltaX << " " << deltaY << endl;
-   		//fill in for game camera
+        float upperBnd = (80*maxScrollY)/180;
+   		currPosX -= deltaX;
+        if (currPosY < upperBnd && currPosY > -upperBnd) {
+            currPosY += deltaY;
+        }
+        if (currPosY >= upperBnd && deltaY < 0) {
+            currPosY += deltaY;
+        }
+        if (currPosY <= upperBnd && deltaY > 0) {
+            currPosY += deltaY;
+        }
+        mapAngle(currPosX, currPosY);
+        computeLookAt();
 	}
+
+    void mapAngle(float posX, float posY) {
+        g_theta = (180/maxScrollX)*posX;
+        g_phi = (180/maxScrollY)*posY;
+    }
+
+    float DegToRad(float degrees) {
+        return degrees*(PI/180.0);
+    }
+
+    void computeLookAt() {
+        float radius = 1.0;
+        float phi = DegToRad(g_phi);
+        float theta = DegToRad(g_theta);
+        float x = radius*cos(phi)*cos(theta);
+        float y = radius*sin(phi);
+        float z = radius*cos(phi)*cos((PI/2.0)-theta);
+        g_lookAt = vec3(x, y, z);
+    }
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
+        maxScrollX = width;
+        maxScrollY = height;
+        mapAngle(currPosX, currPosY);
+        computeLookAt();
 	}
 
 	void init(const std::string& resourceDirectory)
@@ -123,6 +161,7 @@ public:
 		glEnable(GL_DEPTH_TEST);
 
 		g_theta = -PI/2.0;
+        //g_phi = 0;
 
 		// Initialize the GLSL program that we will use for local shading
 		prog = make_shared<Program>();
