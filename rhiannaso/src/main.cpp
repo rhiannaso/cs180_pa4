@@ -50,6 +50,13 @@ public:
 
 	shared_ptr<Shape> cube;
 
+    shared_ptr<Shape> roadObj;
+    shared_ptr<Shape> lampMesh;
+    vector<shared_ptr<Shape>> houseMesh;
+    vector<shared_ptr<Shape>> treeMesh;
+
+    vector<tinyobj::material_t> houseMat;
+
     //skybox data
     vector<std::string> faces {
         "right.jpg",
@@ -70,7 +77,17 @@ public:
 	//the image to use as a texture (ground)
 	shared_ptr<Texture> texture0;
 	shared_ptr<Texture> texture1;	
-	shared_ptr<Texture> texture2;
+	shared_ptr<Texture> brownWood;
+    shared_ptr<Texture> brick;
+    shared_ptr<Texture> blackText;
+    shared_ptr<Texture> lightWood;
+    shared_ptr<Texture> leaf;
+    shared_ptr<Texture> road;
+    shared_ptr<Texture> bumpBrick;
+    shared_ptr<Texture> whiteText;
+    shared_ptr<Texture> tiles;
+    shared_ptr<Texture> stone;
+    shared_ptr<Texture> lamp;
 
 	//animation data
 	float lightTrans = 0;
@@ -79,12 +96,8 @@ public:
 	double g_phi, g_theta;
 	vec3 view = vec3(0, 0, 1);
 	vec3 strafe = vec3(1, 0, 0);
-	vec3 g_eye = vec3(0, 0, 0);
-	vec3 g_lookAt = vec3(0, 0, -4);
-    float maxScrollX = 640;
-    float maxScrollY = 480;
-    float currPosX = (-90*maxScrollX)/180;
-    float currPosY = 0;
+	vec3 g_eye = vec3(0, 0.5, 2);
+	vec3 g_lookAt = vec3(0, 0.5, -4);
     float speed = 0.3;
 
 	Spline splinepath[2];
@@ -145,25 +158,18 @@ public:
 
 
 	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY) {
-        float upperBnd = (80*maxScrollY)/180;
-   		currPosX -= deltaX;
-        if (currPosY < upperBnd && currPosY > -upperBnd) {
-            currPosY += deltaY;
+        g_theta -= deltaX/100;
+        if (g_phi < DegToRad(80) && g_phi > -DegToRad(80)) {
+            g_phi += deltaY/100;
         }
-        if (currPosY >= upperBnd && deltaY < 0) {
-            currPosY += deltaY;
+        if (g_phi >= DegToRad(80) && deltaY < 0) {
+            g_phi += deltaY/100;
         }
-        if (currPosY <= upperBnd && deltaY > 0) {
-            currPosY += deltaY;
+        if (g_phi <= DegToRad(80) && deltaY > 0) {
+            g_phi += deltaY/100;
         }
-        mapAngle(currPosX, currPosY);
         computeLookAt();
 	}
-
-    void mapAngle(float posX, float posY) {
-        g_theta = (180/maxScrollX)*posX;
-        g_phi = (180/maxScrollY)*posY;
-    }
 
     float DegToRad(float degrees) {
         return degrees*(PI/180.0);
@@ -171,21 +177,15 @@ public:
 
     void computeLookAt() {
         float radius = 1.0;
-        float phi = DegToRad(g_phi);
-        float theta = DegToRad(g_theta);
-        float x = radius*cos(phi)*cos(theta);
-        float y = radius*sin(phi);
-        float z = radius*cos(phi)*cos((PI/2.0)-theta);
+        float x = radius*cos(g_phi)*cos(g_theta);
+        float y = radius*sin(g_phi);
+        float z = radius*cos(g_phi)*cos((PI/2.0)-g_theta);
         g_lookAt = vec3(x, y, z) + g_eye;
     }
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
-        maxScrollX = width;
-        maxScrollY = height;
-        mapAngle(currPosX, currPosY);
-        computeLookAt();
 	}
 
 	void init(const std::string& resourceDirectory)
@@ -198,7 +198,6 @@ public:
 		glEnable(GL_DEPTH_TEST);
 
 		g_theta = -PI/2.0;
-        //g_phi = 0;
 
 		// Initialize the GLSL program that we will use for local shading
 		prog = make_shared<Program>();
@@ -247,11 +246,71 @@ public:
   		texture1->setUnit(1);
   		texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
-  		texture2 = make_shared<Texture>();
-  		texture2->setFilename(resourceDirectory + "/cartoonWood.jpg");
-  		texture2->init();
-  		texture2->setUnit(2);
-  		texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+  		brownWood = make_shared<Texture>();
+  		brownWood->setFilename(resourceDirectory + "/cartoonWood.jpg");
+  		brownWood->init();
+  		brownWood->setUnit(2);
+  		brownWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        brick = make_shared<Texture>();
+  		brick->setFilename(resourceDirectory + "/brickHouse/campiangatebrick1.jpg");
+  		brick->init();
+  		brick->setUnit(3);
+  		brick->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        blackText = make_shared<Texture>();
+  		blackText->setFilename(resourceDirectory + "/brickHouse/063.jpg");
+  		blackText->init();
+  		blackText->setUnit(4);
+  		blackText->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        lightWood = make_shared<Texture>();
+  		lightWood->setFilename(resourceDirectory + "/wood.jpg");
+  		lightWood->init();
+  		lightWood->setUnit(5);
+  		lightWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        leaf = make_shared<Texture>();
+  		leaf->setFilename(resourceDirectory + "/leaf.jpg");
+  		leaf->init();
+  		leaf->setUnit(6);
+  		leaf->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        road = make_shared<Texture>();
+  		road->setFilename(resourceDirectory + "/asphalt3.jpg");
+  		road->init();
+  		road->setUnit(7);
+  		road->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        bumpBrick = make_shared<Texture>();
+  		bumpBrick->setFilename(resourceDirectory + "/brickHouse/campiangatebrick1_bump.jpg");
+  		bumpBrick->init();
+  		bumpBrick->setUnit(8);
+  		bumpBrick->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        whiteText = make_shared<Texture>();
+  		whiteText->setFilename(resourceDirectory + "/brickHouse/HighBuild_texture.jpg");
+  		whiteText->init();
+  		whiteText->setUnit(9);
+  		whiteText->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        tiles = make_shared<Texture>();
+  		tiles->setFilename(resourceDirectory + "/brickHouse/panTiles_1024_more_red.jpg");
+  		tiles->init();
+  		tiles->setUnit(10);
+  		tiles->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        stone = make_shared<Texture>();
+  		stone->setFilename(resourceDirectory + "/brickHouse/stones006x04.jpg");
+  		stone->init();
+  		stone->setUnit(11);
+  		stone->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        lamp = make_shared<Texture>();
+  		lamp->setFilename(resourceDirectory + "/diffuse_streetlamp.jpg");
+  		lamp->init();
+  		lamp->setUnit(12);
+  		lamp->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         // Initialize the GLSL program that we will use for texture mapping
 		cubeProg = make_shared<Program>();
@@ -266,8 +325,8 @@ public:
 		cubeProg->addAttribute("vertNor");
 
   		// init splines up and down
-       splinepath[0] = Spline(glm::vec3(-6,0,5), glm::vec3(-1,-5,5), glm::vec3(1, 5, 5), glm::vec3(2,0,5), 5);
-       splinepath[1] = Spline(glm::vec3(2,0,5), glm::vec3(3,-2,5), glm::vec3(-0.25, 0.25, 5), glm::vec3(0,0,5), 5);
+       splinepath[0] = Spline(glm::vec3(-6,3,5), glm::vec3(-1,0,5), glm::vec3(1, 5, 5), glm::vec3(3,3,5), 5);
+       splinepath[1] = Spline(glm::vec3(3,3,5), glm::vec3(4,1,5), glm::vec3(-0.75, 0.25, 5), glm::vec3(0,0,5), 5);
     
 	}
 
@@ -332,12 +391,66 @@ public:
 		if (!rc) {
 			cerr << errStr << endl;
 		} else {
-			
 			cube = make_shared<Shape>();
 			cube->createShape(TOshapesB[0]);
 			cube->measure();
 			cube->init();
 		}
+
+        rc = tinyobj::LoadObj(TOshapes, houseMat, errStr, (resourceDirectory + "/brickHouse/CH_building1.obj").c_str(), (resourceDirectory + "/brickHouse/").c_str());
+        if (!rc) {
+			cerr << errStr << endl;
+		} else {
+            for (int i = 0; i < TOshapes.size(); i++) {
+                shared_ptr<Shape> tmp = make_shared<Shape>();
+                tmp->createShape(TOshapes[i]);
+                tmp->measure();
+                tmp->init();
+
+                // findMin(tmp->min.x, tmp->min.y, tmp->min.z, "house");
+                // findMax(tmp->max.x, tmp->max.y, tmp->max.z, "house");
+                
+                houseMesh.push_back(tmp);
+            }
+		}
+
+        rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/streetlamp.obj").c_str());
+		if (!rc) {
+			cerr << errStr << endl;
+		} else {
+            lampMesh = make_shared<Shape>();
+            lampMesh->createShape(TOshapes[0]);
+            lampMesh->measure();
+            lampMesh->init();
+		}
+
+        rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/tree/MapleTree.obj").c_str());
+        if (!rc) {
+			cerr << errStr << endl;
+		} else {
+            for (int i = 0; i < TOshapes.size(); i++) {
+                shared_ptr<Shape> tmp = make_shared<Shape>();
+                tmp->createShape(TOshapes[i]);
+                tmp->measure();
+                tmp->init();
+
+                // findMin(tmp->min.x, tmp->min.y, tmp->min.z, "santa");
+                // findMax(tmp->max.x, tmp->max.y, tmp->max.z, "santa");
+
+                treeMesh.push_back(tmp);
+            }
+		}
+
+        rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/road.obj").c_str());
+        if (!rc) {
+			cerr << errStr << endl;
+		} else {
+			roadObj = make_shared<Shape>();
+			roadObj->createShape(TOshapes[0]);
+			roadObj->measure();
+			roadObj->init();
+		}
+
 
         cubeMapTexture = createSky("../resources/skybox/", faces);
 
@@ -452,6 +565,13 @@ public:
   		}
 	}
 
+    // void SetGenericMat(shared_ptr<Program> curS, float ambient[3], float diffuse[3], float specular[3], float shininess) {
+    //     glUniform3f(curS->getUniform("MatAmb"), ambient[0], ambient[1], ambient[2]);
+    //     glUniform3f(curS->getUniform("MatDif"), diffuse[0], diffuse[1], diffuse[2]);
+    //     glUniform3f(curS->getUniform("MatSpec"), specular[0], specular[1], specular[2]);
+    //     glUniform1f(curS->getUniform("MatShine"), shininess);
+    // }
+
 	/* helper function to set model trasnforms */
   	void SetModel(vec3 trans, float rotY, float rotX, float sc, shared_ptr<Program> curS) {
   		mat4 Trans = glm::translate( glm::mat4(1.0f), trans);
@@ -484,6 +604,98 @@ public:
 		Model->popMatrix();
    	}
 
+    void drawHouse(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog) {
+        Model->pushMatrix();
+            // float zCenter = findCenter(houseMin.z, houseMax.z);
+            // Model->loadIdentity();
+            // Model->translate(vec3(0, 0, -zCenter));
+
+            Model->pushMatrix();
+                Model->translate(vec3(0, -1.25, -10));
+                //Model->rotate(1.5, vec3(0, 1, 0));
+                Model->scale(vec3(0.25, 0.25, 0.25));
+
+                setModel(prog, Model);
+                for (int i=0; i < houseMesh.size(); i++) {
+                    if (i < 90) {
+                        lightWood->bind(prog->getUniform("Texture0"));
+                    } else if (i >= 90 && i < 182) { // >= 178 cutoff for door and garage
+                        blackText->bind(prog->getUniform("Texture0"));
+                    } else {
+                        lightWood->bind(prog->getUniform("Texture0"));
+                    }
+                    houseMesh[i]->draw(prog);
+                }
+            Model->popMatrix();
+        Model->popMatrix();
+    }
+
+    void drawTree(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog, float xPos, float zPos) {
+        Model->pushMatrix();
+            // float zCenter = findCenter(houseMin.z, houseMax.z);
+            // Model->loadIdentity();
+            // Model->translate(vec3(0, 0, -zCenter));
+
+            Model->pushMatrix();
+                Model->translate(vec3(xPos, -1.25, zPos));
+                //Model->rotate(1.5, vec3(0, 1, 0));
+                Model->scale(vec3(0.09, 0.09, 0.09));
+
+                setModel(prog, Model);
+                for (int i=0; i < treeMesh.size(); i++) {
+                    if (i == 0) {
+                        brownWood->bind(prog->getUniform("Texture0"));
+                    } else {
+                        leaf->bind(prog->getUniform("Texture0"));
+                    }
+                    treeMesh[i]->draw(prog);
+                }
+            Model->popMatrix();
+        Model->popMatrix();
+    }
+
+    void drawLamps(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog) {
+        Model->pushMatrix();
+
+            float zVals[4] = {12, 6, 0, -6};
+            lamp->bind(prog->getUniform("Texture0"));
+
+            for (int l=0; l < 4; l++) {
+                Model->pushMatrix();
+                    Model->translate(vec3(4.5, -1.25, zVals[l]));
+                    Model->scale(vec3(1, 1, 1));
+                    setModel(prog, Model);
+                    lampMesh->draw(prog);
+                Model->popMatrix();
+            }
+
+            for (int r=0; r < 4; r++) {
+                Model->pushMatrix();
+                    Model->translate(vec3(-4.5, -1.25, zVals[r]));
+                    Model->rotate(3.14159, vec3(0, 1, 0));
+                    Model->scale(vec3(1, 1, 1));
+                    setModel(prog, Model);
+                    lampMesh->draw(prog);
+                Model->popMatrix();
+            }
+        Model->popMatrix();
+    }
+
+    void drawRoad(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog) {
+        Model->pushMatrix();
+            Model->pushMatrix();
+                Model->translate(vec3(0, -1.24, 5));
+                Model->rotate(3.1416, vec3(0, 0, 1));
+                // Model->scale(vec3(2, 0.01, 5));
+                Model->scale(vec3(2, 0.1, 3));
+
+                glUniform1i(prog->getUniform("flip"), 0);
+                road->bind(prog->getUniform("Texture0"));
+                setModel(prog, Model);
+                roadObj->draw(prog);
+            Model->popMatrix();
+        Model->popMatrix();
+    }
 
    	void updateUsingCameraPath(float frametime)  {
 
@@ -525,26 +737,35 @@ public:
 		texProg->bind();
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(texProg);
-		glUniform3f(texProg->getUniform("lightPos"), 2.0+lightTrans, 2.0, 2.9);
+		glUniform3f(texProg->getUniform("lightPos"), 2.0+lightTrans, 6.0, 2.9);
 		glUniform1f(texProg->getUniform("MatShine"), 27.9);
 		glUniform1i(texProg->getUniform("flip"), 1);
-		texture2->bind(texProg->getUniform("Texture0"));
-		Model->pushMatrix();
+		// brownWood->bind(texProg->getUniform("Texture0"));
+		// Model->pushMatrix();
 
-		float dScale = 1.0/(theDog->max.x-theDog->min.x);
-		float sp = 3.0;
-		float off = -3.5;
-		  for (int i =0; i < 3; i++) {
-		  	for (int j=0; j < 3; j++) {
-			  Model->pushMatrix();
-				Model->translate(vec3(off+sp*i, -0.5, off+sp*j));
-				Model->scale(vec3(dScale));
-				glUniformMatrix4fv(texProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-				theDog->draw(texProg);
-			  Model->popMatrix();
-			}
-		  }
-		Model->popMatrix();
+		// float dScale = 1.0/(theDog->max.x-theDog->min.x);
+		// float sp = 3.0;
+		// float off = -3.5;
+		//   for (int i =0; i < 3; i++) {
+		//   	for (int j=0; j < 3; j++) {
+		// 	  Model->pushMatrix();
+		// 		Model->translate(vec3(off+sp*i, -0.5, off+sp*j));
+		// 		Model->scale(vec3(dScale));
+		// 		glUniformMatrix4fv(texProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+		// 		theDog->draw(texProg);
+		// 	  Model->popMatrix();
+		// 	}
+		//   }
+		// Model->popMatrix();
+        drawHouse(Model, texProg);
+        drawTree(Model, texProg, 5, -7);
+        drawTree(Model, texProg, -5, -7);
+        vector<vector<float>> pos = {{6, 2}, {-12, 4}, {-10, -6}, {12, 7}, {8, -12}, {-8, 10}, {14, -2}, {-6, -1}, {-5, 4}, {8, 10}, {7, -4}};
+        for (int i=0; i < pos.size(); i++) {
+            drawTree(Model, texProg, pos[i][0], pos[i][1]);
+        }
+        drawLamps(Model, texProg);
+        drawRoad(Model, texProg);
 
 		// //draw big background sphere
 		// glUniform1i(texProg->getUniform("flip"), 0);
@@ -591,10 +812,10 @@ public:
 		//set up all the matrices
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(prog);
-		glUniform3f(prog->getUniform("lightPos"), 2.0+lightTrans, 2.0, 2.9);
+		glUniform3f(prog->getUniform("lightPos"), 2.0+lightTrans, 6.0, 2.9);
 		//draw the waving HM
-		SetMaterial(prog, 1);
-		drawHierModel(Model, prog);
+		// SetMaterial(prog, 1);
+		// drawHierModel(Model, prog);
 		prog->unbind();
 
 		// Pop matrix stacks.
