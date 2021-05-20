@@ -72,8 +72,6 @@ public:
     float currPosX = (-90*maxScrollX)/180;
     float currPosY = 0;
     float speed = 0.3;
-    vec3 spStrafe = vec3(0, 0, 0);
-    vec3 spView = vec3(0, 0, 0);
 
 	Spline splinepath[2];
 	bool goCamera = false;
@@ -98,31 +96,25 @@ public:
 		}
         if (key == GLFW_KEY_W && action == GLFW_PRESS){
 			view = g_lookAt - g_eye;
-            spView = speed*view;
-            g_eye = g_eye + spView;
-            g_lookAt = g_lookAt + spView;
+            g_eye = g_eye + (speed*view);
+            g_lookAt = g_lookAt + (speed*view);
 		}
         if (key == GLFW_KEY_A && action == GLFW_PRESS){
             view = g_lookAt - g_eye;
             strafe = cross(view, vec3(0, 1, 0));
-            spStrafe = speed*strafe;
-			g_eye = g_eye - spStrafe;
-            g_lookAt = g_lookAt - spStrafe;
-            //spStrafe *= -1;
+			g_eye = g_eye - (speed*strafe);
+            g_lookAt = g_lookAt - (speed*strafe);
 		}
         if (key == GLFW_KEY_S && action == GLFW_PRESS){
 			view = g_lookAt - g_eye;
-            spView = speed*view;
-            g_eye = g_eye - spView;
-            g_lookAt = g_lookAt - spView;
-            //spView *= -1;
+            g_eye = g_eye - (speed*view);
+            g_lookAt = g_lookAt - (speed*view);
 		}
         if (key == GLFW_KEY_D && action == GLFW_PRESS){
             view = g_lookAt - g_eye;
             strafe = cross(view, vec3(0, 1, 0));
-            spStrafe = speed*strafe;
-			g_eye = g_eye + spStrafe;
-            g_lookAt = g_lookAt + spStrafe;
+			g_eye = g_eye + (speed*strafe);
+            g_lookAt = g_lookAt + (speed*strafe);
 		}
 	}
 
@@ -170,7 +162,7 @@ public:
         float x = radius*cos(phi)*cos(theta);
         float y = radius*sin(phi);
         float z = radius*cos(phi)*cos((PI/2.0)-theta);
-        g_lookAt = vec3(x, y, z) + spStrafe + spView;
+        g_lookAt = vec3(x, y, z) + g_eye;
     }
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
