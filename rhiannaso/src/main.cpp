@@ -54,8 +54,12 @@ public:
     shared_ptr<Shape> lampMesh;
     vector<shared_ptr<Shape>> houseMesh;
     vector<shared_ptr<Shape>> treeMesh;
+    vector<shared_ptr<Shape>> carMesh;
 
     vector<tinyobj::material_t> houseMat;
+    vector<tinyobj::material_t> carMat;
+
+    float driveTheta = 0;
 
     //skybox data
     vector<std::string> faces {
@@ -96,7 +100,7 @@ public:
 	double g_phi, g_theta;
 	vec3 view = vec3(0, 0, 1);
 	vec3 strafe = vec3(1, 0, 0);
-	vec3 g_eye = vec3(0, 0.5, 2);
+	vec3 g_eye = vec3(0, 0.5, 6);
 	vec3 g_lookAt = vec3(0, 0.5, -4);
     float speed = 0.3;
 
@@ -110,10 +114,10 @@ public:
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
 		if (key == GLFW_KEY_Q && action == GLFW_PRESS){
-			lightTrans += 0.5;
+			lightTrans -= 0.5;
 		}
 		if (key == GLFW_KEY_E && action == GLFW_PRESS){
-			lightTrans -= 0.5;
+			lightTrans += 0.5;
 		}
 		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -397,7 +401,27 @@ public:
 			cube->init();
 		}
 
+        rc = tinyobj::LoadObj(TOshapes, carMat, errStr, (resourceDirectory + "/car/car.obj").c_str(), (resourceDirectory + "/car/").c_str());
+        cout << carMat.size() << endl;
+        cout << TOshapes.size() << endl;
+        if (!rc) {
+			cerr << errStr << endl;
+		} else {
+            for (int i = 0; i < TOshapes.size(); i++) {
+                shared_ptr<Shape> tmp = make_shared<Shape>();
+                tmp->createShape(TOshapes[i]);
+                tmp->measure();
+                tmp->init();
+
+                // findMin(tmp->min.x, tmp->min.y, tmp->min.z, "house");
+                // findMax(tmp->max.x, tmp->max.y, tmp->max.z, "house");
+                
+                carMesh.push_back(tmp);
+            }
+		}
+
         rc = tinyobj::LoadObj(TOshapes, houseMat, errStr, (resourceDirectory + "/brickHouse/CH_building1.obj").c_str(), (resourceDirectory + "/brickHouse/").c_str());
+        cout << houseMat.size() << endl;
         if (!rc) {
 			cerr << errStr << endl;
 		} else {
@@ -461,7 +485,7 @@ public:
 	//directly pass quad for the ground to the GPU
 	void initGround() {
 
-		float g_groundSize = 30;
+		float g_groundSize = 20;
 		float g_groundY = -0.25;
 
   		// A x-z plane at y = g_groundY of dimension [-g_groundSize, g_groundSize]^2
@@ -565,12 +589,16 @@ public:
   		}
 	}
 
-    // void SetGenericMat(shared_ptr<Program> curS, float ambient[3], float diffuse[3], float specular[3], float shininess) {
-    //     glUniform3f(curS->getUniform("MatAmb"), ambient[0], ambient[1], ambient[2]);
-    //     glUniform3f(curS->getUniform("MatDif"), diffuse[0], diffuse[1], diffuse[2]);
-    //     glUniform3f(curS->getUniform("MatSpec"), specular[0], specular[1], specular[2]);
-    //     glUniform1f(curS->getUniform("MatShine"), shininess);
-    // }
+    void SetGenericMat(shared_ptr<Program> curS, float ambient[3], float diffuse[3], float specular[3], float shininess, string type) {
+        if (type == "car") {
+            glUniform3f(curS->getUniform("MatAmb"), 0.05, 0.05, 0.05);
+        } else {
+            glUniform3f(curS->getUniform("MatAmb"), ambient[0], ambient[1], ambient[2]);
+        }
+        glUniform3f(curS->getUniform("MatDif"), diffuse[0], diffuse[1], diffuse[2]);
+        glUniform3f(curS->getUniform("MatSpec"), specular[0], specular[1], specular[2]);
+        glUniform1f(curS->getUniform("MatShine"), shininess);
+    }
 
 	/* helper function to set model trasnforms */
   	void SetModel(vec3 trans, float rotY, float rotX, float sc, shared_ptr<Program> curS) {
@@ -611,7 +639,7 @@ public:
             // Model->translate(vec3(0, 0, -zCenter));
 
             Model->pushMatrix();
-                Model->translate(vec3(0, -1.25, -10));
+                Model->translate(vec3(0, -1.25, -7));
                 //Model->rotate(1.5, vec3(0, 1, 0));
                 Model->scale(vec3(0.25, 0.25, 0.25));
 
@@ -657,7 +685,7 @@ public:
     void drawLamps(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog) {
         Model->pushMatrix();
 
-            float zVals[4] = {12, 6, 0, -6};
+            float zVals[4] = {15, 9, 3, -3};
             lamp->bind(prog->getUniform("Texture0"));
 
             for (int l=0; l < 4; l++) {
@@ -677,6 +705,31 @@ public:
                     setModel(prog, Model);
                     lampMesh->draw(prog);
                 Model->popMatrix();
+            }
+        Model->popMatrix();
+    }
+
+    void drawCar(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog) {
+        driveTheta = 1.5*sin(glfwGetTime());
+
+        Model->pushMatrix();
+            Model->translate(vec3(2.7, -0.7, 2));
+            Model->translate(vec3(0, 0, driveTheta));
+            Model->scale(vec3(0.3, 0.3, 0.3));
+
+            setModel(prog, Model);
+            float diffuse[3] = {0.840000, 0.332781, 0.311726};
+            for (int i=0; i < carMesh.size(); i++) {
+                if (i < 10) {
+                    SetGenericMat(prog, carMat[0].ambient, carMat[0].diffuse, carMat[0].specular, carMat[0].shininess, "car");
+                } else if (i > 20 && i < 23) {
+                    SetGenericMat(prog, carMat[0].ambient, carMat[0].diffuse, carMat[0].specular, carMat[0].shininess, "car");
+                } else if (i >= 12 && i < 16) {
+                    SetGenericMat(prog, carMat[7].ambient, carMat[7].diffuse, carMat[7].specular, carMat[7].shininess, "car");
+                } else {
+                    SetGenericMat(prog, carMat[5].ambient, carMat[5].diffuse, carMat[5].specular, carMat[5].shininess, "car");
+                }
+                carMesh[i]->draw(prog);
             }
         Model->popMatrix();
     }
@@ -737,7 +790,7 @@ public:
 		texProg->bind();
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(texProg);
-		glUniform3f(texProg->getUniform("lightPos"), 2.0+lightTrans, 6.0, 2.9);
+		glUniform3f(texProg->getUniform("lightPos"), 4.0+lightTrans, 6.0, 5.9);
 		glUniform1f(texProg->getUniform("MatShine"), 27.9);
 		glUniform1i(texProg->getUniform("flip"), 1);
 		// brownWood->bind(texProg->getUniform("Texture0"));
@@ -758,8 +811,8 @@ public:
 		//   }
 		// Model->popMatrix();
         drawHouse(Model, texProg);
-        drawTree(Model, texProg, 5, -7);
-        drawTree(Model, texProg, -5, -7);
+        drawTree(Model, texProg, 5, -4);
+        drawTree(Model, texProg, -5, -4);
         vector<vector<float>> pos = {{6, 2}, {-12, 4}, {-10, -6}, {12, 7}, {8, -12}, {-8, 10}, {14, -2}, {-6, -1}, {-5, 4}, {8, 10}, {7, -4}};
         for (int i=0; i < pos.size(); i++) {
             drawTree(Model, texProg, pos[i][0], pos[i][1]);
@@ -812,7 +865,8 @@ public:
 		//set up all the matrices
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(prog);
-		glUniform3f(prog->getUniform("lightPos"), 2.0+lightTrans, 6.0, 2.9);
+		glUniform3f(prog->getUniform("lightPos"), 4.0+lightTrans, 6.0, 5.9);
+        drawCar(Model, prog);
 		//draw the waving HM
 		// SetMaterial(prog, 1);
 		// drawHierModel(Model, prog);

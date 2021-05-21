@@ -74,7 +74,7 @@ void Shape::init()
 	if (texBuf.empty())
 	{
 		texBufID = 0;
-		cout << "warning no textures!" << endl;
+		//cout << "warning no textures!" << endl;
 	}
 	else
 	{
