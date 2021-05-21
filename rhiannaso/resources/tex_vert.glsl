@@ -20,7 +20,7 @@ void main() {
 
   fragNor = (V*M * vec4(vertNor, 0.0)).xyz;
   lightDir = (V*(vec4(lightPos - wPos, 0.0))).xyz;
-  EPos = vec3(1); //PULLED for release
+  EPos = (V * M * vec4(vertPos.xyz, 1.0)).xyz;
   
   /* pass through the texture coordinates to be interpolated */
   vTexCoord = vertTex;

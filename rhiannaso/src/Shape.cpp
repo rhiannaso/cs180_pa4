@@ -16,6 +16,7 @@ void Shape::createShape(tinyobj::shape_t & shape)
 	norBuf = shape.mesh.normals;
 	texBuf = shape.mesh.texcoords;
 	eleBuf = shape.mesh.indices;
+    matBuf = shape.mesh.material_ids;
 }
 
 void Shape::measure()

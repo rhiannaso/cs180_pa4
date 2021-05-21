@@ -22,6 +22,7 @@ public:
 	void init();
 	void measure();
 	void draw(const std::shared_ptr<Program> prog) const;
+    std::vector<int> getMat() { return matBuf; }
 
 	glm::vec3 min = glm::vec3(0);
 	glm::vec3 max = glm::vec3(0);
@@ -32,6 +33,7 @@ private:
 	std::vector<float> posBuf;
 	std::vector<float> norBuf;
 	std::vector<float> texBuf;
+    std::vector<int> matBuf;
 	unsigned int eleBufID = 0;
 	unsigned int posBufID = 0;
 	unsigned int norBufID = 0;

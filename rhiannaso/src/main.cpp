@@ -58,6 +58,7 @@ public:
 
     vector<tinyobj::material_t> houseMat;
     vector<tinyobj::material_t> carMat;
+    map<string, shared_ptr<Texture>> textureMap;
 
     float driveTheta = 0;
 
@@ -92,6 +93,8 @@ public:
     shared_ptr<Texture> tiles;
     shared_ptr<Texture> stone;
     shared_ptr<Texture> lamp;
+    shared_ptr<Texture> whiteWood;
+    shared_ptr<Texture> glass;
 
 	//animation data
 	float lightTrans = 0;
@@ -218,7 +221,7 @@ public:
 		prog->addUniform("lightPos");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
-		prog->addAttribute("vertTex"); //silence error
+		//prog->addAttribute("vertTex"); //silence error
 
 
 		// Initialize the GLSL program that we will use for texture mapping
@@ -260,13 +263,15 @@ public:
   		brick->setFilename(resourceDirectory + "/brickHouse/campiangatebrick1.jpg");
   		brick->init();
   		brick->setUnit(3);
-  		brick->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+  		brick->setWrapModes(GL_REPEAT, GL_REPEAT);
+        textureMap.insert(pair<string, shared_ptr<Texture>>("campiangatebrick1.jpg", brick));
 
         blackText = make_shared<Texture>();
   		blackText->setFilename(resourceDirectory + "/brickHouse/063.jpg");
   		blackText->init();
   		blackText->setUnit(4);
   		blackText->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        textureMap.insert(pair<string, shared_ptr<Texture>>("063.JPG", blackText));
 
         lightWood = make_shared<Texture>();
   		lightWood->setFilename(resourceDirectory + "/wood.jpg");
@@ -275,7 +280,7 @@ public:
   		lightWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         leaf = make_shared<Texture>();
-  		leaf->setFilename(resourceDirectory + "/leaf.jpg");
+  		leaf->setFilename(resourceDirectory + "/tree/maple_leaf.png");
   		leaf->init();
   		leaf->setUnit(6);
   		leaf->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
@@ -291,30 +296,46 @@ public:
   		bumpBrick->init();
   		bumpBrick->setUnit(8);
   		bumpBrick->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        textureMap.insert(pair<string, shared_ptr<Texture>>("campiangatebrick1_bump.jpg", bumpBrick));
 
         whiteText = make_shared<Texture>();
   		whiteText->setFilename(resourceDirectory + "/brickHouse/HighBuild_texture.jpg");
   		whiteText->init();
   		whiteText->setUnit(9);
   		whiteText->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        textureMap.insert(pair<string, shared_ptr<Texture>>("HighBuild_texture.jpg", whiteText));
 
         tiles = make_shared<Texture>();
   		tiles->setFilename(resourceDirectory + "/brickHouse/panTiles_1024_more_red.jpg");
   		tiles->init();
   		tiles->setUnit(10);
-  		tiles->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+  		tiles->setWrapModes(GL_REPEAT, GL_REPEAT);
+        textureMap.insert(pair<string, shared_ptr<Texture>>("panTiles_1024_more_red.jpg", tiles));
 
         stone = make_shared<Texture>();
   		stone->setFilename(resourceDirectory + "/brickHouse/stones006x04.jpg");
   		stone->init();
   		stone->setUnit(11);
   		stone->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        textureMap.insert(pair<string, shared_ptr<Texture>>("stones006x04.jpg", stone));
 
         lamp = make_shared<Texture>();
   		lamp->setFilename(resourceDirectory + "/diffuse_streetlamp.jpg");
   		lamp->init();
   		lamp->setUnit(12);
   		lamp->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        whiteWood = make_shared<Texture>();
+  		whiteWood->setFilename(resourceDirectory + "/white_wood.jpg");
+  		whiteWood->init();
+  		whiteWood->setUnit(13);
+  		whiteWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        glass = make_shared<Texture>();
+  		glass->setFilename(resourceDirectory + "/glass.jpg");
+  		glass->init();
+  		glass->setUnit(13);
+  		glass->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         // Initialize the GLSL program that we will use for texture mapping
 		cubeProg = make_shared<Program>();
@@ -402,8 +423,6 @@ public:
 		}
 
         rc = tinyobj::LoadObj(TOshapes, carMat, errStr, (resourceDirectory + "/car/car.obj").c_str(), (resourceDirectory + "/car/").c_str());
-        cout << carMat.size() << endl;
-        cout << TOshapes.size() << endl;
         if (!rc) {
 			cerr << errStr << endl;
 		} else {
@@ -421,7 +440,6 @@ public:
 		}
 
         rc = tinyobj::LoadObj(TOshapes, houseMat, errStr, (resourceDirectory + "/brickHouse/CH_building1.obj").c_str(), (resourceDirectory + "/brickHouse/").c_str());
-        cout << houseMat.size() << endl;
         if (!rc) {
 			cerr << errStr << endl;
 		} else {
@@ -437,6 +455,11 @@ public:
                 houseMesh.push_back(tmp);
             }
 		}
+        // cout << houseMesh[0]->getMat().size() << endl;
+        // for (int i=0; i < houseMesh[0]->getMat().size(); i++) {
+        //     cout << "MAT: " << houseMesh[0]->getMat()[i] << endl;
+        // }
+
 
         rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/streetlamp.obj").c_str());
 		if (!rc) {
@@ -590,14 +613,18 @@ public:
 	}
 
     void SetGenericMat(shared_ptr<Program> curS, float ambient[3], float diffuse[3], float specular[3], float shininess, string type) {
-        if (type == "car") {
-            glUniform3f(curS->getUniform("MatAmb"), 0.05, 0.05, 0.05);
+        if (type == "house") {
+            glUniform1f(curS->getUniform("MatShine"), shininess);
         } else {
-            glUniform3f(curS->getUniform("MatAmb"), ambient[0], ambient[1], ambient[2]);
+            if (type == "car") {
+                glUniform3f(curS->getUniform("MatAmb"), 0.05, 0.05, 0.05);
+            } else {
+                glUniform3f(curS->getUniform("MatAmb"), ambient[0], ambient[1], ambient[2]);
+            }
+            glUniform3f(curS->getUniform("MatDif"), diffuse[0], diffuse[1], diffuse[2]);
+            glUniform3f(curS->getUniform("MatSpec"), specular[0], specular[1], specular[2]);
+            glUniform1f(curS->getUniform("MatShine"), shininess);
         }
-        glUniform3f(curS->getUniform("MatDif"), diffuse[0], diffuse[1], diffuse[2]);
-        glUniform3f(curS->getUniform("MatSpec"), specular[0], specular[1], specular[2]);
-        glUniform1f(curS->getUniform("MatShine"), shininess);
     }
 
 	/* helper function to set model trasnforms */
@@ -632,27 +659,38 @@ public:
 		Model->popMatrix();
    	}
 
-    void drawHouse(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog) {
+    void drawHouse(shared_ptr<MatrixStack> Model, shared_ptr<Program> drawProg) {
         Model->pushMatrix();
-            // float zCenter = findCenter(houseMin.z, houseMax.z);
-            // Model->loadIdentity();
-            // Model->translate(vec3(0, 0, -zCenter));
-
             Model->pushMatrix();
                 Model->translate(vec3(0, -1.25, -7));
                 //Model->rotate(1.5, vec3(0, 1, 0));
                 Model->scale(vec3(0.25, 0.25, 0.25));
 
-                setModel(prog, Model);
+                setModel(drawProg, Model);
                 for (int i=0; i < houseMesh.size(); i++) {
-                    if (i < 90) {
-                        lightWood->bind(prog->getUniform("Texture0"));
-                    } else if (i >= 90 && i < 182) { // >= 178 cutoff for door and garage
-                        blackText->bind(prog->getUniform("Texture0"));
+                    int mat = houseMesh[i]->getMat()[0];
+                    //SetMaterial(drawProg, 1);
+                    SetGenericMat(drawProg, houseMat[mat].ambient, houseMat[mat].diffuse, houseMat[mat].specular, houseMat[mat].shininess, "house");
+                    if (houseMat[mat].diffuse_texname != "") {
+                        //cout << houseMat[mat].diffuse_texname << endl;
+                        textureMap.at(houseMat[mat].diffuse_texname)->bind(drawProg->getUniform("Texture0"));
                     } else {
-                        lightWood->bind(prog->getUniform("Texture0"));
+                        if (mat == 10) {
+                            glass->bind(drawProg->getUniform("Texture0"));
+                        } else if (mat == 4) {
+                            blackText->bind(drawProg->getUniform("Texture0"));
+                        } else {
+                            whiteWood->bind(drawProg->getUniform("Texture0"));
+                        }
                     }
-                    houseMesh[i]->draw(prog);
+                    // if (i < 90) {
+                    //     lightWood->bind(drawProg->getUniform("Texture0"));
+                    // } else if (i >= 90 && i < 182) { // >= 178 cutoff for door and garage
+                    //     blackText->bind(drawProg->getUniform("Texture0"));
+                    // } else {
+                    //     lightWood->bind(drawProg->getUniform("Texture0"));
+                    // }
+                    houseMesh[i]->draw(drawProg);
                 }
             Model->popMatrix();
         Model->popMatrix();
@@ -720,15 +758,8 @@ public:
             setModel(prog, Model);
             float diffuse[3] = {0.840000, 0.332781, 0.311726};
             for (int i=0; i < carMesh.size(); i++) {
-                if (i < 10) {
-                    SetGenericMat(prog, carMat[0].ambient, carMat[0].diffuse, carMat[0].specular, carMat[0].shininess, "car");
-                } else if (i > 20 && i < 23) {
-                    SetGenericMat(prog, carMat[0].ambient, carMat[0].diffuse, carMat[0].specular, carMat[0].shininess, "car");
-                } else if (i >= 12 && i < 16) {
-                    SetGenericMat(prog, carMat[7].ambient, carMat[7].diffuse, carMat[7].specular, carMat[7].shininess, "car");
-                } else {
-                    SetGenericMat(prog, carMat[5].ambient, carMat[5].diffuse, carMat[5].specular, carMat[5].shininess, "car");
-                }
+                int mat = carMesh[i]->getMat()[0];
+                SetGenericMat(prog, carMat[mat].ambient, carMat[mat].diffuse, carMat[mat].specular, carMat[mat].shininess, "car");
                 carMesh[i]->draw(prog);
             }
         Model->popMatrix();
@@ -792,7 +823,7 @@ public:
 		SetView(texProg);
 		glUniform3f(texProg->getUniform("lightPos"), 4.0+lightTrans, 6.0, 5.9);
 		glUniform1f(texProg->getUniform("MatShine"), 27.9);
-		glUniform1i(texProg->getUniform("flip"), 1);
+		//glUniform1i(texProg->getUniform("flip"), 1);
 		// brownWood->bind(texProg->getUniform("Texture0"));
 		// Model->pushMatrix();
 

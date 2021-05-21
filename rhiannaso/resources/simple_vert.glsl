@@ -15,5 +15,5 @@ void main()
 	gl_Position = P * V * M * vertPos;
 	fragNor = (V*M * vec4(vertNor, 0.0)).xyz;
 	lightDir = vec3(V*(vec4(lightPos - (M*vertPos).xyz, 0.0)));
-	EPos = vec3(1); //PULLED for release
+	EPos = (V * M * vertPos).xyz;
 }

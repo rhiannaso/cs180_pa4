@@ -18,5 +18,10 @@ void main()
 	vec3 normal = normalize(fragNor);
 	vec3 light = normalize(lightDir);
 	float dC = max(0, dot(normal, light));
-	color = vec4(MatAmb + dC*MatDif, 1.0);
+	vec3 V = -1*EPos;
+    vec3 H = normalize(lightDir + V);
+    float NH = (normal.x*H.x) + (normal.y*H.y) + (normal.z*H.z);
+    float NHPow = pow(NH, MatShine);
+
+	color = vec4(MatAmb + (dC*MatDif) + (NHPow*MatSpec), 1.0);
 }
