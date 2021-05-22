@@ -21,6 +21,8 @@ public:
 	void createShape(tinyobj::shape_t & shape);
 	void init();
 	void measure();
+    void storeNormal(glm::vec3 n, int index);
+    void computeNormals();
 	void draw(const std::shared_ptr<Program> prog) const;
     std::vector<int> getMat() { return matBuf; }
 

@@ -103,7 +103,7 @@ public:
 	double g_phi, g_theta;
 	vec3 view = vec3(0, 0, 1);
 	vec3 strafe = vec3(1, 0, 0);
-	vec3 g_eye = vec3(0, 0.5, 6);
+	vec3 g_eye = vec3(0, 0.5, 5);
 	vec3 g_lookAt = vec3(0, 0.5, -4);
     float speed = 0.3;
 
@@ -195,57 +195,13 @@ public:
 		glViewport(0, 0, width, height);
 	}
 
-	void init(const std::string& resourceDirectory)
-	{
-		GLSL::checkVersion();
-
-		// Set background color.
-		glClearColor(.72f, .84f, 1.06f, 1.0f);
-		// Enable z-buffer test.
-		glEnable(GL_DEPTH_TEST);
-
-		g_theta = -PI/2.0;
-
-		// Initialize the GLSL program that we will use for local shading
-		prog = make_shared<Program>();
-		prog->setVerbose(true);
-		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
-		prog->init();
-		prog->addUniform("P");
-		prog->addUniform("V");
-		prog->addUniform("M");
-		prog->addUniform("MatAmb");
-		prog->addUniform("MatDif");
-		prog->addUniform("MatSpec");
-		prog->addUniform("MatShine");
-		prog->addUniform("lightPos");
-		prog->addAttribute("vertPos");
-		prog->addAttribute("vertNor");
-		//prog->addAttribute("vertTex"); //silence error
-
-
-		// Initialize the GLSL program that we will use for texture mapping
-		texProg = make_shared<Program>();
-		texProg->setVerbose(true);
-		texProg->setShaderNames(resourceDirectory + "/tex_vert.glsl", resourceDirectory + "/tex_frag0.glsl");
-		texProg->init();
-		texProg->addUniform("P");
-		texProg->addUniform("V");
-		texProg->addUniform("M");
-		texProg->addUniform("flip");
-		texProg->addUniform("Texture0");
-		texProg->addUniform("MatShine");
-		texProg->addUniform("lightPos");
-		texProg->addAttribute("vertPos");
-		texProg->addAttribute("vertNor");
-		texProg->addAttribute("vertTex");
-
-		//read in a load the texture
+    void setTextures(const std::string& resourceDirectory) {
+        //read in a load the texture
 		texture0 = make_shared<Texture>();
-  		texture0->setFilename(resourceDirectory + "/grass.jpg");
+  		texture0->setFilename(resourceDirectory + "/grass_low.jpg");
   		texture0->init();
   		texture0->setUnit(0);
-  		texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+  		texture0->setWrapModes(GL_REPEAT, GL_REPEAT);
 
   		texture1 = make_shared<Texture>();
   		texture1->setFilename(resourceDirectory + "/skyBox/back.jpg");
@@ -274,7 +230,7 @@ public:
         textureMap.insert(pair<string, shared_ptr<Texture>>("063.JPG", blackText));
 
         lightWood = make_shared<Texture>();
-  		lightWood->setFilename(resourceDirectory + "/wood.jpg");
+  		lightWood->setFilename(resourceDirectory + "/brown_wood.jpg");
   		lightWood->init();
   		lightWood->setUnit(5);
   		lightWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
@@ -329,13 +285,61 @@ public:
   		whiteWood->setFilename(resourceDirectory + "/white_wood.jpg");
   		whiteWood->init();
   		whiteWood->setUnit(13);
-  		whiteWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+  		whiteWood->setWrapModes(GL_REPEAT, GL_REPEAT);
 
         glass = make_shared<Texture>();
   		glass->setFilename(resourceDirectory + "/glass.jpg");
   		glass->init();
   		glass->setUnit(13);
   		glass->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    }
+
+	void init(const std::string& resourceDirectory)
+	{
+		GLSL::checkVersion();
+
+		// Set background color.
+		glClearColor(.72f, .84f, 1.06f, 1.0f);
+		// Enable z-buffer test.
+		glEnable(GL_DEPTH_TEST);
+
+		g_theta = -PI/2.0;
+
+		// Initialize the GLSL program that we will use for local shading
+		prog = make_shared<Program>();
+		prog->setVerbose(true);
+		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/simple_frag.glsl");
+		prog->init();
+		prog->addUniform("P");
+		prog->addUniform("V");
+		prog->addUniform("M");
+		prog->addUniform("MatAmb");
+		prog->addUniform("MatDif");
+		prog->addUniform("MatSpec");
+		prog->addUniform("MatShine");
+		prog->addUniform("lightPos");
+		prog->addAttribute("vertPos");
+		prog->addAttribute("vertNor");
+		//prog->addAttribute("vertTex"); //silence error
+
+
+		// Initialize the GLSL program that we will use for texture mapping
+		texProg = make_shared<Program>();
+		texProg->setVerbose(true);
+		texProg->setShaderNames(resourceDirectory + "/tex_vert.glsl", resourceDirectory + "/tex_frag0.glsl");
+		texProg->init();
+		texProg->addUniform("P");
+		texProg->addUniform("V");
+		texProg->addUniform("M");
+		texProg->addUniform("flip");
+		texProg->addUniform("Texture0");
+		texProg->addUniform("MatShine");
+		texProg->addUniform("lightPos");
+		texProg->addAttribute("vertPos");
+		texProg->addAttribute("vertNor");
+		texProg->addAttribute("vertTex");
+
+        setTextures(resourceDirectory);
 
         // Initialize the GLSL program that we will use for texture mapping
 		cubeProg = make_shared<Program>();
@@ -455,11 +459,6 @@ public:
                 houseMesh.push_back(tmp);
             }
 		}
-        // cout << houseMesh[0]->getMat().size() << endl;
-        // for (int i=0; i < houseMesh[0]->getMat().size(); i++) {
-        //     cout << "MAT: " << houseMesh[0]->getMat()[i] << endl;
-        // }
-
 
         rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/streetlamp.obj").c_str());
 		if (!rc) {
@@ -663,17 +662,23 @@ public:
         Model->pushMatrix();
             Model->pushMatrix();
                 Model->translate(vec3(0, -1.25, -7));
-                //Model->rotate(1.5, vec3(0, 1, 0));
                 Model->scale(vec3(0.25, 0.25, 0.25));
 
                 setModel(drawProg, Model);
                 for (int i=0; i < houseMesh.size(); i++) {
                     int mat = houseMesh[i]->getMat()[0];
-                    //SetMaterial(drawProg, 1);
                     SetGenericMat(drawProg, houseMat[mat].ambient, houseMat[mat].diffuse, houseMat[mat].specular, houseMat[mat].shininess, "house");
                     if (houseMat[mat].diffuse_texname != "") {
-                        //cout << houseMat[mat].diffuse_texname << endl;
-                        textureMap.at(houseMat[mat].diffuse_texname)->bind(drawProg->getUniform("Texture0"));
+                        if (i == 260 || i == 264) {
+                            glUniform1i(drawProg->getUniform("flip"), 0);
+                        } else {
+                            glUniform1i(drawProg->getUniform("flip"), 1);
+                        } 
+                        if (houseMat[mat].diffuse_texname == "063.JPG") {
+                            lightWood->bind(drawProg->getUniform("Texture0"));
+                        } else {
+                            textureMap.at(houseMat[mat].diffuse_texname)->bind(drawProg->getUniform("Texture0"));
+                        }
                     } else {
                         if (mat == 10) {
                             glass->bind(drawProg->getUniform("Texture0"));
@@ -683,13 +688,6 @@ public:
                             whiteWood->bind(drawProg->getUniform("Texture0"));
                         }
                     }
-                    // if (i < 90) {
-                    //     lightWood->bind(drawProg->getUniform("Texture0"));
-                    // } else if (i >= 90 && i < 182) { // >= 178 cutoff for door and garage
-                    //     blackText->bind(drawProg->getUniform("Texture0"));
-                    // } else {
-                    //     lightWood->bind(drawProg->getUniform("Texture0"));
-                    // }
                     houseMesh[i]->draw(drawProg);
                 }
             Model->popMatrix();
@@ -698,13 +696,8 @@ public:
 
     void drawTree(shared_ptr<MatrixStack> Model, shared_ptr<Program> prog, float xPos, float zPos) {
         Model->pushMatrix();
-            // float zCenter = findCenter(houseMin.z, houseMax.z);
-            // Model->loadIdentity();
-            // Model->translate(vec3(0, 0, -zCenter));
-
             Model->pushMatrix();
                 Model->translate(vec3(xPos, -1.25, zPos));
-                //Model->rotate(1.5, vec3(0, 1, 0));
                 Model->scale(vec3(0.09, 0.09, 0.09));
 
                 setModel(prog, Model);
@@ -751,7 +744,7 @@ public:
         driveTheta = 1.5*sin(glfwGetTime());
 
         Model->pushMatrix();
-            Model->translate(vec3(2.7, -0.7, 2));
+            Model->translate(vec3(2.7, -0.85, 2));
             Model->translate(vec3(0, 0, driveTheta));
             Model->scale(vec3(0.3, 0.3, 0.3));
 
@@ -771,7 +764,7 @@ public:
                 Model->translate(vec3(0, -1.24, 5));
                 Model->rotate(3.1416, vec3(0, 0, 1));
                 // Model->scale(vec3(2, 0.01, 5));
-                Model->scale(vec3(2, 0.1, 3));
+                Model->scale(vec3(1.9, 0.1, 3));
 
                 glUniform1i(prog->getUniform("flip"), 0);
                 road->bind(prog->getUniform("Texture0"));
@@ -821,26 +814,9 @@ public:
 		texProg->bind();
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(texProg);
-		glUniform3f(texProg->getUniform("lightPos"), 4.0+lightTrans, 6.0, 5.9);
-		glUniform1f(texProg->getUniform("MatShine"), 27.9);
-		//glUniform1i(texProg->getUniform("flip"), 1);
-		// brownWood->bind(texProg->getUniform("Texture0"));
-		// Model->pushMatrix();
+		glUniform3f(texProg->getUniform("lightPos"), 2.0+lightTrans, 9.0, 6);
+        glUniform1i(texProg->getUniform("flip"), 1);
 
-		// float dScale = 1.0/(theDog->max.x-theDog->min.x);
-		// float sp = 3.0;
-		// float off = -3.5;
-		//   for (int i =0; i < 3; i++) {
-		//   	for (int j=0; j < 3; j++) {
-		// 	  Model->pushMatrix();
-		// 		Model->translate(vec3(off+sp*i, -0.5, off+sp*j));
-		// 		Model->scale(vec3(dScale));
-		// 		glUniformMatrix4fv(texProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-		// 		theDog->draw(texProg);
-		// 	  Model->popMatrix();
-		// 	}
-		//   }
-		// Model->popMatrix();
         drawHouse(Model, texProg);
         drawTree(Model, texProg, 5, -4);
         drawTree(Model, texProg, -5, -4);
@@ -861,7 +837,7 @@ public:
 		// 	sphere->draw(texProg);
 		// Model->popMatrix();
 
-		glUniform1i(texProg->getUniform("flip"), 1);
+        glUniform1i(texProg->getUniform("flip"), 1);
 		drawGround(texProg);
 
 		texProg->unbind();
@@ -896,7 +872,7 @@ public:
 		//set up all the matrices
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(prog);
-		glUniform3f(prog->getUniform("lightPos"), 4.0+lightTrans, 6.0, 5.9);
+		glUniform3f(prog->getUniform("lightPos"), 2.0+lightTrans, 9.0, 6);
         drawCar(Model, prog);
 		//draw the waving HM
 		// SetMaterial(prog, 1);

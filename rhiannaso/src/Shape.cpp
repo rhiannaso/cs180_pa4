@@ -48,6 +48,45 @@ void Shape::measure()
 	max.z = maxZ;
 }
 
+void Shape::storeNormal(glm::vec3 n, int index)
+{
+    norBuf[3*index] += n.x;
+    norBuf[3*index+1] += n.y;
+    norBuf[3*index+2] += n.z;
+}
+
+void Shape::computeNormals()
+{
+    vector<glm::vec3> parsedT; // Hold grouped vertices
+    norBuf.clear();
+    for (int i=0; i < posBuf.size(); i += 3) {
+        parsedT.push_back(glm::vec3(posBuf[i], posBuf[i+1], posBuf[i+2]));
+        norBuf.push_back(0);
+        norBuf.push_back(0);
+        norBuf.push_back(0);
+    } 
+    // Iterate over each face
+    for (int i=0; i < eleBuf.size(); i += 3) {
+        glm::vec3 v0 = parsedT[eleBuf[i]];
+        glm::vec3 v1 = parsedT[eleBuf[i+1]];
+        glm::vec3 v2 = parsedT[eleBuf[i+2]];
+        glm::vec3 e1 = v1 - v0;
+        glm::vec3 e2 = v2 - v0;
+        glm::vec3 n = glm::cross(e1, e2);
+        storeNormal(n, eleBuf[i]);
+        storeNormal(n, eleBuf[i+1]);
+        storeNormal(n, eleBuf[i+2]);
+    }
+    // Iterate over each vertex and normalize
+    for (size_t v = 0; v < posBuf.size() / 3; v++) {
+        glm::vec3 n = glm::vec3(norBuf[3*v], norBuf[3*v+1], norBuf[3*v+2]);
+        glm::vec3 normalized = glm::normalize(n);
+        norBuf[3*v] = normalized.x;
+        norBuf[3*v+1] = normalized.y;
+        norBuf[3*v+2] = normalized.z;
+    }
+}
+
 void Shape::init()
 {
 	// Initialize the vertex array object
