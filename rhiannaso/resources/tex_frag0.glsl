@@ -21,14 +21,10 @@ in vec3 EPos;
 
 void main() {
   vec4 texColor0 = texture(Texture0, vTexCoord);
-  //Outcolor = texColor0;
 
   vec3 normal = normalize(fragNor);
   if (flip < 1)
   	normal *= -1.0f;
-    /*if (dot(normal, vec3(0, 1, 0)) < 0) {
-        normal *= -1.0f;
-    }*/
   vec3 light = normalize(lightDir);
   float dC = max(0, dot(normal, light));
 
@@ -41,13 +37,11 @@ void main() {
       discard;
   }
 
-  MatAmb = (0.1*texColor0).xyz;
+  MatAmb = (0.3*texColor0).xyz;
   MatDif = (0.7*texColor0).xyz;
   MatSpec = (0.7*texColor0).xyz;
 
   Outcolor = vec4(MatAmb + (dC*MatDif) + (NHPow*MatSpec), 1.0);
-  //Outcolor = vec4(MatAmb + (dC*MatDif), 1.0);
-  //Outcolor = vec4(0.5*normal + 0.5, 1.0);
 
   //to confirm texture coordinates
   //Outcolor = vec4(vTexCoord.x, vTexCoord.y, 0, 0);

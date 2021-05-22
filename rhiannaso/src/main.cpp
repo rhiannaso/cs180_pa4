@@ -245,7 +245,7 @@ public:
   		road->setFilename(resourceDirectory + "/asphalt3.jpg");
   		road->init();
   		road->setUnit(7);
-  		road->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+  		road->setWrapModes(GL_REPEAT, GL_REPEAT);
 
         bumpBrick = make_shared<Texture>();
   		bumpBrick->setFilename(resourceDirectory + "/brickHouse/campiangatebrick1_bump.jpg");
@@ -498,7 +498,7 @@ public:
 		}
 
 
-        cubeMapTexture = createSky("../resources/skybox/", faces);
+        cubeMapTexture = createSky("../resources/sky/", faces);
 
 		//code to load in the ground plane (CPU defined data passed to GPU)
 		initGround();
@@ -703,7 +703,7 @@ public:
                 setModel(prog, Model);
                 for (int i=0; i < treeMesh.size(); i++) {
                     if (i == 0) {
-                        brownWood->bind(prog->getUniform("Texture0"));
+                        lightWood->bind(prog->getUniform("Texture0"));
                     } else {
                         leaf->bind(prog->getUniform("Texture0"));
                     }
