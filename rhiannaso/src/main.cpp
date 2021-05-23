@@ -320,7 +320,6 @@ public:
 		prog->addUniform("lightPos");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
-		//prog->addAttribute("vertTex"); //silence error
 
 
 		// Initialize the GLSL program that we will use for texture mapping
@@ -435,9 +434,6 @@ public:
                 tmp->createShape(TOshapes[i]);
                 tmp->measure();
                 tmp->init();
-
-                // findMin(tmp->min.x, tmp->min.y, tmp->min.z, "house");
-                // findMax(tmp->max.x, tmp->max.y, tmp->max.z, "house");
                 
                 carMesh.push_back(tmp);
             }
@@ -452,9 +448,6 @@ public:
                 tmp->createShape(TOshapes[i]);
                 tmp->measure();
                 tmp->init();
-
-                // findMin(tmp->min.x, tmp->min.y, tmp->min.z, "house");
-                // findMax(tmp->max.x, tmp->max.y, tmp->max.z, "house");
                 
                 houseMesh.push_back(tmp);
             }
@@ -480,9 +473,6 @@ public:
                 tmp->measure();
                 tmp->init();
 
-                // findMin(tmp->min.x, tmp->min.y, tmp->min.z, "santa");
-                // findMax(tmp->max.x, tmp->max.y, tmp->max.z, "santa");
-
                 treeMesh.push_back(tmp);
             }
 		}
@@ -498,7 +488,7 @@ public:
 		}
 
 
-        cubeMapTexture = createSky("../resources/sky/", faces);
+        cubeMapTexture = createSky("../resources/cloudy/", faces);
 
 		//code to load in the ground plane (CPU defined data passed to GPU)
 		initGround();
@@ -718,6 +708,7 @@ public:
 
             float zVals[4] = {15, 9, 3, -3};
             lamp->bind(prog->getUniform("Texture0"));
+            glUniform1f(prog->getUniform("MatShine"), 120);
 
             for (int l=0; l < 4; l++) {
                 Model->pushMatrix();
@@ -763,7 +754,6 @@ public:
             Model->pushMatrix();
                 Model->translate(vec3(0, -1.24, 5));
                 Model->rotate(3.1416, vec3(0, 0, 1));
-                // Model->scale(vec3(2, 0.01, 5));
                 Model->scale(vec3(1.9, 0.1, 3));
 
                 glUniform1i(prog->getUniform("flip"), 0);
@@ -814,7 +804,7 @@ public:
 		texProg->bind();
 		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(texProg);
-		glUniform3f(texProg->getUniform("lightPos"), 2.0+lightTrans, 9.0, 6);
+		glUniform3f(texProg->getUniform("lightPos"), 3.0+lightTrans, 8.0, 7);
         glUniform1i(texProg->getUniform("flip"), 1);
 
         drawHouse(Model, texProg);
@@ -826,16 +816,6 @@ public:
         }
         drawLamps(Model, texProg);
         drawRoad(Model, texProg);
-
-		// //draw big background sphere
-		// glUniform1i(texProg->getUniform("flip"), 0);
-		// texture1->bind(texProg->getUniform("Texture0"));
-		// Model->pushMatrix();
-		// 	Model->loadIdentity();
-		// 	Model->scale(vec3(8.0));
-		// 	setModel(texProg, Model);
-		// 	sphere->draw(texProg);
-		// Model->popMatrix();
 
         glUniform1i(texProg->getUniform("flip"), 1);
 		drawGround(texProg);
@@ -853,6 +833,7 @@ public:
         SetView(cubeProg);
         //set and send model transforms - likely want a bigger cube
         Model->pushMatrix();
+        Model->rotate(3.1416, vec3(0, 1, 0));
         Model->scale(vec3(35, 35, 35));
         glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
         Model->popMatrix();
@@ -872,11 +853,8 @@ public:
 		//set up all the matrices
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		SetView(prog);
-		glUniform3f(prog->getUniform("lightPos"), 2.0+lightTrans, 9.0, 6);
+		glUniform3f(prog->getUniform("lightPos"), 3.0+lightTrans, 8.0, 7);
         drawCar(Model, prog);
-		//draw the waving HM
-		// SetMaterial(prog, 1);
-		// drawHierModel(Model, prog);
 		prog->unbind();
 
 		// Pop matrix stacks.
