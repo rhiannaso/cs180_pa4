@@ -815,7 +815,10 @@ public:
         drawHouse(Model, texProg);
         drawTree(Model, texProg, 5, -4);
         drawTree(Model, texProg, -5, -4);
-        vector<vector<float>> pos = {{6, 2}, {-12, 4}, {-10, -6}, {12, 7}, {8, -12}, {-8, 10}, {14, -2}, {-6, -1}, {-5, 4}, {8, 10}, {7, -4}};
+        vector<vector<float>> pos = {
+            {10, 1}, {9, 7}, {8, 10}, {8, -12}, {11, -4}, {6, 2}, {14, 4}, {10, -8}, {5, 12},
+            {-12, 4}, {-10, -6}, {-8, 10}, {-6, -1}, {-5, 4}, {-9, 0}, {-14, 9}, {-6, 12}
+        };
         for (int i=0; i < pos.size(); i++) {
             drawTree(Model, texProg, pos[i][0], pos[i][1]);
         }
