@@ -81,7 +81,6 @@ public:
 
 	//the image to use as a texture (ground)
 	shared_ptr<Texture> texture0;
-	shared_ptr<Texture> texture1;	
 	shared_ptr<Texture> brownWood;
     shared_ptr<Texture> brick;
     shared_ptr<Texture> blackText;
@@ -207,88 +206,82 @@ public:
   		texture0->setUnit(0);
   		texture0->setWrapModes(GL_REPEAT, GL_REPEAT);
 
-  		texture1 = make_shared<Texture>();
-  		texture1->setFilename(resourceDirectory + "/skyBox/back.jpg");
-  		texture1->init();
-  		texture1->setUnit(1);
-  		texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
   		brownWood = make_shared<Texture>();
   		brownWood->setFilename(resourceDirectory + "/cartoonWood.jpg");
   		brownWood->init();
-  		brownWood->setUnit(2);
+  		brownWood->setUnit(1);
   		brownWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         brick = make_shared<Texture>();
   		brick->setFilename(resourceDirectory + "/brickHouse/campiangatebrick1.jpg");
   		brick->init();
-  		brick->setUnit(3);
+  		brick->setUnit(2);
   		brick->setWrapModes(GL_REPEAT, GL_REPEAT);
         textureMap.insert(pair<string, shared_ptr<Texture>>("campiangatebrick1.jpg", brick));
 
         blackText = make_shared<Texture>();
   		blackText->setFilename(resourceDirectory + "/brickHouse/063.jpg");
   		blackText->init();
-  		blackText->setUnit(4);
+  		blackText->setUnit(3);
   		blackText->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         textureMap.insert(pair<string, shared_ptr<Texture>>("063.JPG", blackText));
 
         lightWood = make_shared<Texture>();
   		lightWood->setFilename(resourceDirectory + "/brown_wood.jpg");
   		lightWood->init();
-  		lightWood->setUnit(5);
+  		lightWood->setUnit(4);
   		lightWood->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         leaf = make_shared<Texture>();
   		leaf->setFilename(resourceDirectory + "/tree/maple_leaf.png");
   		leaf->init();
-  		leaf->setUnit(6);
+  		leaf->setUnit(5);
   		leaf->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         road = make_shared<Texture>();
   		road->setFilename(resourceDirectory + "/driveway2.jpg");
   		road->init();
-  		road->setUnit(7);
+  		road->setUnit(6);
   		road->setWrapModes(GL_REPEAT, GL_REPEAT);
 
         bumpBrick = make_shared<Texture>();
   		bumpBrick->setFilename(resourceDirectory + "/brickHouse/campiangatebrick1_bump.jpg");
   		bumpBrick->init();
-  		bumpBrick->setUnit(8);
+  		bumpBrick->setUnit(7);
   		bumpBrick->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         textureMap.insert(pair<string, shared_ptr<Texture>>("campiangatebrick1_bump.jpg", bumpBrick));
 
         whiteText = make_shared<Texture>();
   		whiteText->setFilename(resourceDirectory + "/brickHouse/HighBuild_texture.jpg");
   		whiteText->init();
-  		whiteText->setUnit(9);
+  		whiteText->setUnit(8);
   		whiteText->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         textureMap.insert(pair<string, shared_ptr<Texture>>("HighBuild_texture.jpg", whiteText));
 
         tiles = make_shared<Texture>();
   		tiles->setFilename(resourceDirectory + "/brickHouse/panTiles_1024_more_red.jpg");
   		tiles->init();
-  		tiles->setUnit(10);
+  		tiles->setUnit(9);
   		tiles->setWrapModes(GL_REPEAT, GL_REPEAT);
         textureMap.insert(pair<string, shared_ptr<Texture>>("panTiles_1024_more_red.jpg", tiles));
 
         stone = make_shared<Texture>();
   		stone->setFilename(resourceDirectory + "/brickHouse/stones006x04.jpg");
   		stone->init();
-  		stone->setUnit(11);
+  		stone->setUnit(10);
   		stone->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         textureMap.insert(pair<string, shared_ptr<Texture>>("stones006x04.jpg", stone));
 
         lamp = make_shared<Texture>();
   		lamp->setFilename(resourceDirectory + "/diffuse_streetlamp.jpg");
   		lamp->init();
-  		lamp->setUnit(12);
+  		lamp->setUnit(11);
   		lamp->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         whiteWood = make_shared<Texture>();
   		whiteWood->setFilename(resourceDirectory + "/white_wood.jpg");
   		whiteWood->init();
-  		whiteWood->setUnit(13);
+  		whiteWood->setUnit(12);
   		whiteWood->setWrapModes(GL_REPEAT, GL_REPEAT);
 
         glass = make_shared<Texture>();
