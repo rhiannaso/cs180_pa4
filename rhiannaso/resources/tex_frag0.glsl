@@ -33,7 +33,7 @@ void main() {
   float NH = max(0, dot(normal, H));
   float NHPow = pow(NH, MatShine);
   //Outcolor = vec4(dC*texColor0.xyz, 1.0);
-  if (texColor0.x == 0 && texColor0.y == 0 && texColor0.z == 0) {
+  if (texColor0.x < 0.05 && texColor0.y < 0.05 && texColor0.z < 0.05) {
       discard;
   }
 

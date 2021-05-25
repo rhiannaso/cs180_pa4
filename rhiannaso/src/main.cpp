@@ -127,6 +127,8 @@ public:
 		}
 		if (key == GLFW_KEY_G && action == GLFW_RELEASE) {
 			goCamera = !goCamera;
+            if (!goCamera)
+                computeLookAt();
 		}
         if (key == GLFW_KEY_W && action == GLFW_PRESS){
 			view = g_lookAt - g_eye;
@@ -165,17 +167,19 @@ public:
 
 
 	void scrollCallback(GLFWwindow* window, double deltaX, double deltaY) {
-        g_theta -= deltaX/100;
-        if (g_phi < DegToRad(80) && g_phi > -DegToRad(80)) {
-            g_phi += deltaY/100;
+        if (!goCamera) {
+            g_theta -= deltaX/100;
+            if (g_phi < DegToRad(80) && g_phi > -DegToRad(80)) {
+                g_phi += deltaY/100;
+            }
+            if (g_phi >= DegToRad(80) && deltaY < 0) {
+                g_phi += deltaY/100;
+            }
+            if (g_phi <= DegToRad(80) && deltaY > 0) {
+                g_phi += deltaY/100;
+            }
+            computeLookAt();
         }
-        if (g_phi >= DegToRad(80) && deltaY < 0) {
-            g_phi += deltaY/100;
-        }
-        if (g_phi <= DegToRad(80) && deltaY > 0) {
-            g_phi += deltaY/100;
-        }
-        computeLookAt();
 	}
 
     float DegToRad(float degrees) {
@@ -242,7 +246,7 @@ public:
   		leaf->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
         road = make_shared<Texture>();
-  		road->setFilename(resourceDirectory + "/asphalt3.jpg");
+  		road->setFilename(resourceDirectory + "/driveway2.jpg");
   		road->init();
   		road->setUnit(7);
   		road->setWrapModes(GL_REPEAT, GL_REPEAT);
@@ -767,7 +771,8 @@ public:
    	void updateUsingCameraPath(float frametime)  {
 
    	  if (goCamera) {
-       if(!splinepath[0].isDone()){
+        g_lookAt = vec3(0, 0.5, -4);
+        if(!splinepath[0].isDone()){
        		splinepath[0].update(frametime);
             g_eye = splinepath[0].getPosition();
         } else {
